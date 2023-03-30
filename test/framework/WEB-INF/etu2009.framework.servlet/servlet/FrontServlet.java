@@ -60,10 +60,28 @@ public class FrontServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
          PrintWriter out = response.getWriter();
-         out.println(MappingUrls.size());
+        //  out.println(MappingUrls.size());
         //  String url=request.getRequestURI();
                 // RequestDispatcher dispat=request.getRequestDispatcher("url.jsp");
-                // dispat.forward(request,response);           
+                // dispat.forward(request,response);
+
+                out.println(MappingUrls.values());
+                out.println(MappingUrls.size());
+                out.println(request.getRequestURI().replace(request.getContextPath()+"/",""));
+
+                try{
+                    Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
+                    Object o = Class.forName(m.getClassName()).getConstructor().newInstance() ;            
+                    Object vao = o.getClass().getMethod(m.getMethod()).invoke(o);
+                    String urls = "/"+vao.getClass().getSimpleName()+".jsp";
+                    ModelView view = new ModelView(urls);
+                        RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+                        dispat.forward(request, response);
+                    
+                }catch(Exception e){
+                    out.println(e);
+                }
+           
         }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

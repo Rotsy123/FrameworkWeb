@@ -6,7 +6,7 @@
 
     <head>
         <meta charset="utf-8">
-        <title> SPRINT </title>
+        <title> SPRINT 1 </title>
     </head>
 
     <body>

@@ -1,3 +1,0 @@
-cd classes
-jar -cf framework.jar etu2009/framework/servlet
-move framework.jar ../
