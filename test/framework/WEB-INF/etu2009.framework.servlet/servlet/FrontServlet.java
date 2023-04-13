@@ -75,9 +75,21 @@ public class FrontServlet extends HttpServlet {
                     Object vao = o.getClass().getMethod(m.getMethod()).invoke(o);
                     String urls = "/"+vao.getClass().getSimpleName()+".jsp";
                     ModelView view = new ModelView(urls);
+                        out.println("ok");
+                        Employe emp = new Employe("Aro", 20);
+                        Employe emp1 = new Employe("Rotsy", 20);
+
+                        view.addItem("Personne", emp);
+                        view.addItem("Personne", emp1);
+
+                        HashMap<String, Object> donnees = view.getData();
+                        Collection<Object>objet = donnees.values();
+                        for(Object value : objet){
+                            request.setAttribute("Personne",value);
+                            // out.println(value);
+                        }
                         RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
                         dispat.forward(request, response);
-                    
                 }catch(Exception e){
                     out.println(e);
                 }
