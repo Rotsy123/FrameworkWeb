@@ -6,12 +6,15 @@ import jakarta.servlet.http.*;
 import jakarta.servlet.RequestDispatcher;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Field;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.Map;
 import javax.swing.text.View;
 
 import org.apache.commons.io.FilenameUtils;
@@ -60,40 +63,59 @@ public class FrontServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
          PrintWriter out = response.getWriter();
-        //  out.println(MappingUrls.size());
-        //  String url=request.getRequestURI();
-                // RequestDispatcher dispat=request.getRequestDispatcher("url.jsp");
-                // dispat.forward(request,response);
-
-                out.println(MappingUrls.values());
-                out.println(MappingUrls.size());
-                out.println(request.getRequestURI().replace(request.getContextPath()+"/",""));
-
-                try{
+                try{                   
+                    String url = request.getRequestURI();
+                    String[]split = url.split("/", 0);
                     Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
-                    Object o = Class.forName(m.getClassName()).getConstructor().newInstance() ;            
-                    Object vao = o.getClass().getMethod(m.getMethod()).invoke(o);
-                    String urls = "/"+vao.getClass().getSimpleName()+".jsp";
-                    ModelView view = new ModelView(urls);
-                        out.println("ok");
-                        Employe emp = new Employe("Aro", 20);
-                        Employe emp1 = new Employe("Rotsy", 20);
-
-                        view.addItem("Personne", emp);
-                        view.addItem("Personne", emp1);
-
-                        HashMap<String, Object> donnees = view.getData();
-                        Collection<Object>objet = donnees.values();
-                        for(Object value : objet){
-                            request.setAttribute("Personne",value);
-                            // out.println(value);
+                    String key = request.getRequestURI().replace(request.getContextPath()+"/","");
+                    String name =m.getClassName();
+                     
+                    Object o =Class.forName(name).getConstructor().newInstance(null);
+                    Method[] methods = o.getClass().getMethods();
+                    Method mets = null;
+                    for(int i =0; i<methods.length; i++){
+                        if(methods[i].getName().equalsIgnoreCase(m.getMethod())){
+                            mets = methods[i];
+                            break;
                         }
-                        RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
-                        dispat.forward(request, response);
+                    }
+                    Parameter [] parametre = mets.getParameters();
+                    Object [] objet = new Object[parametre.length];
+                    for(int i = 0; i<parametre.length; i++){
+                        Object value = request.getParameter(parametre[i].getName());
+                        objet[i] = value;
+                    }
+                    Object vao = mets.invoke(o, objet);
+                    int paramCount = mets.getParameterCount();
+                    action(m.getMethod(),key,vao,o,request,response);
                 }catch(Exception e){
                     out.println(e);
                 }
-           
+        }
+        public void action(String methodes,String key,Object vao,Object o,HttpServletRequest request, HttpServletResponse response) throws Exception{
+            PrintWriter out = response.getWriter();
+            if (methodes.compareToIgnoreCase("findAll")==0){                  
+                ModelView view = new ModelView(vao.getClass().getSimpleName());
+                view.addItem(key, vao);
+                request.setAttribute(key,view.getData());
+                String viewUrl = view.getUrl()+".jsp";
+                RequestDispatcher dispat = request.getRequestDispatcher(viewUrl);
+                dispat.forward(request, response);
+            }
+            else if(methodes.compareToIgnoreCase("save") == 0){                    
+                Class<?> clazz = o.getClass();
+                Field[] fields = clazz.getDeclaredFields();
+                Method[] listM = new Method[fields.length];
+                for(int i =0; i<fields.length; i++){
+                    String capitalized = Character.toUpperCase(fields[i].getName().charAt(0)) + fields[i].getName().substring(1);
+                    out.println(capitalized+ "cap");
+                    Method temp = clazz.getDeclaredMethod("get"+ capitalized);
+                    Object value = request.getParameter(fields[i].getName());
+                    listM[i] = clazz.getDeclaredMethod("set"+ capitalized,String.class);
+                    listM[i].invoke(o, value);
+                    out.println(temp.invoke(o, null).toString()+"temp   ");
+            }
+            }
         }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
