@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Map;
+import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 import javax.swing.text.View;
@@ -26,33 +27,42 @@ import jakarta.servlet.annotation.MultipartConfig;
  
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-      HashMap<String,Mapping> MappingUrls;
-    public void init (){
-        // PrintWriter out = response.getWriter();
-        MappingUrls = new HashMap<>();
-          try {
-            String directory =getServletContext().getRealPath("/WEB-INF/etu2009.framework.servlet/model");
-            String [] classe = reset(directory);
-            for(int i =0 ;i< classe.length; i++){
-                 String className = classe[i];
-                className = "etu2009.framework.model." +className;
-                Class<?> clazz;
-                clazz = Class.forName(className);
-                Method [] methods = clazz.getDeclaredMethods();
-                for (Method method : methods) {
-                     Annotation[] an = method.getAnnotations();
-                     if(an.length!=0){
-                         GetUrl annotation = method.getAnnotation(GetUrl.class);
-                         MappingUrls.put(annotation.url(),new Mapping(className,method.getName()));
-                     }
+    HashMap<String,Mapping> MappingUrls;
+    HashMap<String,Object> singleton;
+    int k=0; 
+        
+        public void init (){ 
+            MappingUrls = new HashMap<>();
+            singleton = new HashMap<>();
+            try {
+                String directory =getServletContext().getRealPath("/WEB-INF/etu2009.framework.servlet/model");
+                String [] classe = reset(directory);
+                for(int i =0 ;i< classe.length; i++){
+                    String className = classe[i];
+                    className = "etu2009.framework.model." +className;
+                    Class<?> clazz;
+                    clazz = Class.forName(className);
+                    Scopeannotation scope = clazz.getAnnotation(Scopeannotation.class);
+                    if(scope!=null){
+                        String value = scope.indication(); 
+                        k++;
+                        Object ob = clazz;
+                        singleton.put(clazz.getName(), ob);
+                    } 
+                    Method [] methods = clazz.getDeclaredMethods();
+                    for (Method method : methods) {
+                        Annotation[] an = method.getAnnotations();
+                        if(an.length!=0){
+                            GetUrl annotation = method.getAnnotation(GetUrl.class);
+                            MappingUrls.put(annotation.url(),new Mapping(className,method.getName()));
+                        }
+                    }
                 }
-
-
-            }
-         } catch (Exception ex) {
+            }catch (Exception ex){
               ex.printStackTrace();
-         }
+            }
     }
+     
     private  String getFileName(jakarta.servlet.http.Part part) {
         String contentDisposition = part.getHeader("content-disposition");
         String[] parts = contentDisposition.split(";");
@@ -95,8 +105,7 @@ public class FrontServlet extends HttpServlet {
         return file;
     }
     private void handleFile( Class<?> classs, HttpServletRequest request, Object object, HttpServletResponse response )throws Exception{ 
-        PrintWriter out = response.getWriter();
-        out.println("1522222222222X500Principal");
+        PrintWriter out = response.getWriter();        
         Field[] fields = classs.getDeclaredFields();
         try {
             Collection<Part> files = request.getParts();
@@ -131,35 +140,49 @@ public class FrontServlet extends HttpServlet {
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
-         PrintWriter out = response.getWriter();
-                 
-                try{                   
-                    String url = request.getRequestURI();
-                    String[]split = url.split("/", 0);
-                    Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
-                    String key = request.getRequestURI().replace(request.getContextPath()+"/","");
-                    String name =m.getClassName();
-                    out.println(name);
-                    Object o =Class.forName(name).getConstructor().newInstance(null);
-                    Method[] methods = o.getClass().getMethods();
-                    Method mets = null;
-                    for(int i =0; i<methods.length; i++){
-                        if(methods[i].getName().equalsIgnoreCase(m.getMethod())){
-                            mets = methods[i];
-                            break;
-                        }
-                    }
-                    Parameter [] parametre = mets.getParameters();
-                    Object [] objet = new Object[parametre.length];
-                    for(int i = 0; i<parametre.length; i++){
-                        Object value = request.getParameter(parametre[i].getName());
-                        objet[i] = value;
-                    }
-                      action(m.getMethod(),key,null,o,request,response); 
-                        int paramCount = mets.getParameterCount();
-                }catch(Exception e){
-                    out.println(e);
+        PrintWriter out = response.getWriter();
+        out.println(k+" longueur");
+        out.println(singleton.size()+ "size");
+        Set<String> cles = singleton.keySet();
+        out.println(cles.size());        
+        try{                   
+            String url = request.getRequestURI();
+            String[]split = url.split("/", 0);
+            Mapping m = MappingUrls.get(request.getRequestURI().replace(request.getContextPath()+"/",""));
+            String key = request.getRequestURI().replace(request.getContextPath()+"/","");
+            String name =m.getClassName();
+            out.println(name);
+            Class<?> clazz;
+            clazz = Class.forName(name);
+            Class test = Class.forName(name);
+            Object o=null;
+            if(singleton.get(test)!=null){
+                o = singleton.get(test);
+            }else{
+                o = Class.forName(name).getConstructor().newInstance(null);
+
+            }
+            out.println(o.getClass()+"tyyyyyyyyyy");
+            Method[] methods = o.getClass().getMethods();
+            Method mets = null;
+            for(int i =0; i<methods.length; i++){
+                if(methods[i].getName().equalsIgnoreCase(m.getMethod())){
+                    mets = methods[i];
+                    break;
                 }
+            }
+            Parameter [] parametre = mets.getParameters();
+            Object [] objet = new Object[parametre.length];
+            for(int i = 0; i<parametre.length; i++){
+                Object value = request.getParameter(parametre[i].getName());
+                objet[i] = value;
+            }
+            Object vao = o.getClass().getMethod(m.getMethod()).invoke(o);
+            action(m.getMethod(), key, vao, o, request, response); 
+            int paramCount = mets.getParameterCount();
+        }catch(Exception e){
+            throw(e);
+        }
         }
         public void action(String methodes,String key,Object vao,Object o,HttpServletRequest request, HttpServletResponse response) throws Exception{
             PrintWriter out = response.getWriter();
@@ -173,6 +196,7 @@ public class FrontServlet extends HttpServlet {
             }
             else if(methodes.compareToIgnoreCase("save") == 0){                    
                 Class<?> clazz = o.getClass();
+              
                 Field[] fields = clazz.getDeclaredFields();
                 Method[] listM = new Method[fields.length];
                 for(int i =0; i<fields.length; i++){

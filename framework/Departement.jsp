@@ -1,4 +1,11 @@
-            <!DOCTYPE html>
+<%@ page import="java.util.HashMap" %>
+<%@ page import="etu2009.framework.model.Departement" %>
+
+    <%
+HashMap<String,Departement> depte =(HashMap<String,Departement>)request.getAttribute("findAllDept");
+Departement dept = depte.get("findAllDept");
+%>
+          <!DOCTYPE html>
             <html>
 
             <head>

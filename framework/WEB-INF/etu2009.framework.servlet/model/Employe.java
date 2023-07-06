@@ -1,9 +1,8 @@
 package etu2009.framework.model;
-
 import etu2009.framework.servlet.GetUrl;
-
-public class Employe {
-    
+import etu2009.framework.servlet.Scopeannotation;
+@Scopeannotation(indication="singleton")
+public class Employe {    
     String name;
     int ages ;
     
