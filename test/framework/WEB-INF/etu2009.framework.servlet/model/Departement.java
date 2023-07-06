@@ -2,25 +2,29 @@ package etu2009.framework.model;
 
 import etu2009.framework.servlet.*;
 
-
 public class Departement {
-    private String nom_departement;
-    private int nbr_departement;
-    
-    @GetUrl(url="findAllDept")
-    public Departement findAll(){
-        Departement emp = new Departement(getNom_departement(),getNbr_departement());
+    String nom_departement;
+    Double nbr_departement;
+
+    @GetUrl(url = "findAllDept")
+    public Departement findAll() {
+        Departement emp = new Departement(getNom_departement(), getNbr_departement());
         return emp;
     }
+
+    @GetUrl(url = "saveDept")
+    public void save() {
+        Departement emp = new Departement(this.getNom_departement(), this.getNbr_departement());
+    }
+
     public Departement() {
     }
-    public Departement(String nom_departement, int nbr_departement) {
+
+    public Departement(String nom_departement, Double nbr_departement) {
         this.nom_departement = nom_departement;
         this.nbr_departement = nbr_departement;
     }
 
-
-    
     public String getNom_departement() {
         return nom_departement;
     }
@@ -29,11 +33,16 @@ public class Departement {
         this.nom_departement = nom_departement;
     }
 
-    public int getNbr_departement() {
+    public Double getNbr_departement() {
         return nbr_departement;
     }
 
-    public void setNbr_departement(int nbr_departement) {
+    public void setNbr_departement(String nbr_departement) {
+        double dept = Double.parseDouble(nbr_departement);
+        this.nbr_departement = dept;
+    }
+
+    public void getAtt(Double nbr_departement) {
         this.nbr_departement = nbr_departement;
     }
 }

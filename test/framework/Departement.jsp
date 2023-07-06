@@ -1,18 +1,32 @@
-<%@page import="etu2009.framework.model.Employe"%>
-    <%Object o = request.getAttribute("Personne");%>
-        <%Employe emp = (Employe)o;%>
-            <%=emp.getName()%>
-                <!DOCTYPE html>
-                <html>
+<%@ page import="java.util.HashMap" %>
+    <%@ page import="etu2009.framework.model.Departement" %>
 
-                <head>
-                    <meta charset="utf-8">
-                    <title> SPRINT 1 </title>
-                </head>
+        <%
+    HashMap<String,Departement> depte =(HashMap<String,Departement>)request.getAttribute("findAllDept");
+    Departement dept = depte.get("findAllDept");
+%>
+            <!DOCTYPE html>
+            <html>
 
-                <body>
-                    <h1>Hello World</h1>
-                    </form>
-                </body>
+            <head>
+                <meta charset="UTF-8">
+                <title>Departement</title>
+            </head>
 
-                </html>
+            <body>
+              
+
+                <h2>Insertion Departement</h2>
+                <form action="saveDept">
+                    <label for="name">Nom Departement</label>
+                    <p><input type="text" name="nom_departement"></p>
+                    <br>
+                    <label for="name">Nombre Departement</label>
+                    <p><input type="number" name="nbr_departement"></p>
+                    <br>
+                    <input type="hidden" name="classe" value="Departement">
+                    <input type="submit" value="Inserer">
+                </form>
+            </body>
+
+            </html>

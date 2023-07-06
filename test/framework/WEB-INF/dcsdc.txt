@@ -1,0 +1,45 @@
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        MyClass obj = new MyClass();
+        Method method = obj.getClass().getMethod("foo", int.class);
+        Parameter[] parameters = method.getParameters();
+        parameters[0].getName(); // "n"
+        parameters[0].setAccessible(true);
+        parameters[0].set(obj, 42);
+        obj.foo(42); // "n = 42"
+    }
+}
+
+
+
+///////---------------------------////////////////////////////////
+
+
+public void remplacerParametre(String nomParametre, Object val) {
+  // Obtenir toutes les classes chargées dans l'application
+  Class<?>[] classes = getAllClasses();
+
+  // Parcourir chaque classe
+  for (Class<?> cls : classes) {
+    // Obtenir toutes les méthodes déclarées dans la classe
+    Method[] methods = cls.getDeclaredMethods();
+
+    // Parcourir chaque méthode
+    for (Method method : methods) {
+      // Obtenir tous les paramètres de la méthode
+      Parameter[] params = method.getParameters();
+
+      // Parcourir chaque paramètre
+      for (Parameter param : params) {
+        // Vérifier si le nom du paramètre correspond à nomParametre
+        if (param.getName().equals(nomParametre)) {
+          // Modifier la valeur du paramètre à val
+          method.invoke(null, val);
+        }
+      }
+    }
+  }
+}
