@@ -17,6 +17,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Map;
 import java.util.Set;
+import org.json.simple.JSONObject;
+import jakarta.servlet.http.HttpSession;
+import java.util.LinkedHashMap;
+
 
 import javax.security.auth.x500.X500Principal;
 import javax.swing.text.View;
@@ -29,13 +33,20 @@ import jakarta.servlet.annotation.MultipartConfig;
 public class FrontServlet extends HttpServlet {
     HashMap<String,Mapping> MappingUrls;
     HashMap<String,Object> singleton;
+    HashMap<String ,Object> session= new HashMap<String ,Object>();
     int k=0; 
-        
+    public void setsession(String nom,Object o){
+        session.put(nom, o);
+    }
+    public HashMap<String ,Object> getsession(){
+        return session;
+    }
         public void init (){ 
             MappingUrls = new HashMap<>();
             singleton = new HashMap<>();
+        
             try {
-                String directory =getServletContext().getRealPath("/WEB-INF/etu2009.framework.servlet/model");
+                String directory = getServletContext().getRealPath("/WEB-INF/etu2009.framework.servlet/model");
                 String [] classe = reset(directory);
                 for(int i =0 ;i< classe.length; i++){
                     String className = classe[i];
@@ -62,7 +73,24 @@ public class FrontServlet extends HttpServlet {
               ex.printStackTrace();
             }
     }
-     
+    public void redirect(ModelView nomjs ,HttpServletRequest req, HttpServletResponse res)throws ServletException, IOException ,Exception{ 
+        PrintWriter out=res.getWriter();
+        HashMap<String,Object> dataMap = nomjs.getData();        
+        Method isjon = nomjs.getClass().getMethod("getIsjson",new Class[0]);
+       
+        if((Boolean) isjon.invoke(nomjs, (Object[])null)==true){
+            JSONObject jsonObject = new JSONObject();
+            for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                jsonObject.put(key, value);
+            }
+            String json = jsonObject.toJSONString();
+            out.println(json);
+            out.println("tafifitra");
+            return ;
+        }
+    }
     private  String getFileName(jakarta.servlet.http.Part part) {
         String contentDisposition = part.getHeader("content-disposition");
         String[] parts = contentDisposition.split(";");
@@ -191,6 +219,10 @@ public class FrontServlet extends HttpServlet {
                 view.addItem(key, vao);
                 request.setAttribute(key,view.getData());
                 String viewUrl = view.getUrl()+".jsp";
+                // if(view.getUrl().equalsIgnoreCase("Employe")){
+                //     view.setIsjson(true);
+                // }
+                redirect(view, request, response);
                 RequestDispatcher dispat = request.getRequestDispatcher(viewUrl);
                 dispat.forward(request, response);
             }
