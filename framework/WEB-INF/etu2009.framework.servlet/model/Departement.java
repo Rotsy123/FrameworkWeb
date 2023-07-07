@@ -1,6 +1,7 @@
 package etu2009.framework.model;
 import etu2009.framework.servlet.Scopeannotation;
 import etu2009.framework.servlet.RestapiAnnotation;
+import etu2009.framework.servlet.AuthAnnotation;
 
 import etu2009.framework.servlet.*;
 
@@ -24,10 +25,19 @@ public class Departement {
 
     @RestapiAnnotation(indication = "restapi")
     @GetUrl(url="findAllDept")
+    @AuthAnnotation(admin="admin")
     public ModelView findAll(Integer id){
         Departement emp = new Departement("Departement Marketing",12);
         ModelView view  = new ModelView(this.getClass().getSimpleName());
         view.addItem("dept", emp);
+        return view;
+    }
+
+    @GetUrl(url="Login")
+    public ModelView Login(){
+        ModelView view = new ModelView("index");
+        view.addSession("isconnected", "true");
+        view.addSession("profil", "true");
         return view;
     }
     @GetUrl(url="saveDept")

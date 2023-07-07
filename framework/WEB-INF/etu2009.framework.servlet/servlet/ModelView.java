@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class ModelView {
     String url;
-    HashMap<String,Object> data;
+    HashMap<String,Object> data=new HashMap<String,Object>();
     HashMap<String,Object> session=new HashMap<String,Object>();
     Boolean isjson = false;
     

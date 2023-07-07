@@ -1,5 +1,9 @@
 package etu2009.framework.servlet;
 import etu2009.framework.model.Employe;
+import etu2009.framework.servlet.AuthAnnotation;
+import etu2009.framework.servlet.GetUrl;
+import etu2009.framework.servlet.RestapiAnnotation;
+
 import java.io.*;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -35,18 +39,16 @@ import com.google.gson.Gson;
 public class FrontServlet extends HttpServlet {
     HashMap<String,Mapping> MappingUrls;
     HashMap<String,Object> singleton;
-    HashMap<String ,Object> session= new HashMap<String ,Object>();
+    String session;
+    String profil;
     int k=0; 
-    public void setsession(String nom,Object o){
-        session.put(nom, o);
-    }
-    public HashMap<String ,Object> getsession(){
-        return session;
-    }
+     
     public void init (){ 
         MappingUrls = new HashMap<>();
         singleton = new HashMap<>();
         try {
+            session = getInitParameter("connecte");
+            profil = getInitParameter("type");
             String directory = getServletContext().getRealPath("/WEB-INF/etu2009.framework.servlet/model");
             String [] classe = reset(directory);
             for(int i =0 ;i< classe.length; i++){
@@ -55,16 +57,14 @@ public class FrontServlet extends HttpServlet {
                 Class<?> clazz;
                 clazz = Class.forName(className);
                 Scopeannotation scope = clazz.getAnnotation(Scopeannotation.class);
-                if(scope!=null){
-                    // String value = scope.indication(); 
+                if(scope!=null){ 
                     k++;
                     Object ob = clazz;
                     singleton.put(clazz.getName(), null);
                 } 
                 Method [] methods = clazz.getDeclaredMethods();
-                for (Method method : methods) {
-                    Annotation[] an = method.getAnnotations();
-                    if(an.length!=0){
+                for (Method method : methods) { 
+                    if(method.isAnnotationPresent(GetUrl.class)){
                         GetUrl annotation = method.getAnnotation(GetUrl.class);
                         MappingUrls.put(annotation.url(),new Mapping(className,method.getName()));
                     }
@@ -201,6 +201,18 @@ public class FrontServlet extends HttpServlet {
                     }
                 }
                 
+                if(mets.isAnnotationPresent(AuthAnnotation.class)){
+                    if(request.getSession().getAttribute(session)!=null){
+                        AuthAnnotation auth = mets.getAnnotation(AuthAnnotation.class);
+                        if(auth.admin().isEmpty()==false && auth.admin().equals(request.getSession().getAttribute(profil))==false){
+                            throw new Exception("VOUS NE POUVEZ PAS ACCEDER A CETTE PAGE");
+                        }
+                    }else{
+                        throw new Exception("AUCUNE SESSION EN COURS");
+                    }
+                }
+
+
                 int paramCount = mets.getParameterCount();
                 ModelView view;
                 Object [] objet;
@@ -209,46 +221,66 @@ public class FrontServlet extends HttpServlet {
                     Class<?> clazz = o.getClass();
                     Field[] fields = clazz.getDeclaredFields();
                     Method[] listM = new Method[fields.length];
-                    for(int i = 0; i<fields.length;i++){   
-                      if(fields[i].getType()!= FileUpload.class){
-                        listM[i] = clazz.getDeclaredMethod("set"+ Capitalized(fields[i].getName()),fields[i].getType());
-                        Method temp = clazz.getDeclaredMethod("get"+ Capitalized(fields[i].getName()));
-                        String value = request.getParameter(fields[i].getName());
-                        Object ob = caste(value,fields[i].getType());
-                        listM[i].invoke(o,ob );
-                        out.println(temp.invoke(o, null).toString());
-                      }
-                      this.handleFile(clazz, request, o, response);
-                }
-                ModelView views = new ModelView("teste");
-                views.addItem("aro", o);
-                request.setAttribute("aro",o);
-                RequestDispatcher dispat = request.getRequestDispatcher(views.getUrl());
-                dispat.forward(request, response);
-                view = (ModelView)mets.invoke(o, null);
-                
+                    for(int i = 0; i<fields.length;i++){ 
+                        if(fields[i].getType()!= FileUpload.class){
+                          listM[i] = clazz.getDeclaredMethod("set"+ Capitalized(fields[i].getName()),fields[i].getType());
+                          Method temp = clazz.getDeclaredMethod("get"+ Capitalized(fields[i].getName()));
+                          String value = request.getParameter(fields[i].getName());
+                          Object ob = caste(value,fields[i].getType());
+                          listM[i].invoke(o,ob); 
+                        }
+                         this.handleFile(clazz, request, o, response);
+                     }
+   
+                    view = (ModelView)mets.invoke(o);
+                    view.getData().keySet().forEach(keys -> {
+                        request.setAttribute( keys, view.getData().get(keys) );
+                    });
+                    
+                    view.getSession().keySet().forEach( ses ->{
+                        request.getSession().setAttribute(ses, view.getSession().get( ses ));
+                    });
+                    // RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+                    // dispat.forward(request, response);
                 }else{
-                    objet = this.ObjetParametre(mets, request);                    
-                    view = (ModelView)mets.invoke(o,objet);
+                    objet = this.ObjetParametre(mets, request);
+                    view = (ModelView) mets.invoke(o,objet);
+                    view.getData().keySet().forEach(keys -> {
+                        request.setAttribute( keys, view.getData().get(keys) );
+                    });
+                    
+                    view.getSession().keySet().forEach( ses ->{
+                        request.getSession().setAttribute(ses, view.getSession().get( ses ));
+                    });
+                    // RequestDispatcher dispat = request.getRequestDispatcher(view.getUrl());
+                    // dispat.forward(request, response);
                 }
-                view.setIsjson(true);
-                if(view.getIsjson()){
+                Annotation[] an = mets.getAnnotations();
+                if(an.length!=0 ){
+                    RestapiAnnotation annotation = mets.getAnnotation(RestapiAnnotation.class);
                     String json = new Gson().toJson(view.getData());
                     out.println(json);
                 }
-                Annotation[] an = mets.getAnnotations();
-                if(an.length!=0){
-                    RestapiAnnotation annotation = mets.getAnnotation(RestapiAnnotation.class);
+                // view.setIsjson(true);
+                // out.println(view.getIsjson());
+                if(view.getIsjson()){
+                    // out.println("aooo");
                     String json = new Gson().toJson(view.getData());
-                    out.println(json+"methode");
+                    out.println(json);
+                }else{
+                    out.println(new Gson().toJson(view.getData()));
                 }
+                this.Dispatch(view, request, response);
             }catch(Exception e){
-                e.printStackTrace(out);
+                e.printStackTrace(response.getWriter());
             }
         
     }
     public Object caste(String acaster,Class classe){
-         Object vao = acaster;
+        Object vao = acaster;
+         if(acaster == null){
+            return null;
+         }
          if(classe == Double.class){
             vao = Double.parseDouble(acaster);
         }

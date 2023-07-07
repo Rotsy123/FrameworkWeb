@@ -2,6 +2,7 @@ cd etu2009.framework.servlet/servlet
 javac -parameters -d . ModelView.java 
 javac -parameters -d . FileUpload.java
 javac -parameters -d . RestapiAnnotation.java
+javac -parameters -d . AuthAnnotation.java
 javac -parameters -d . GetUrl.java
 javac -parameters -d . Scopeannotation.java
 move etu2009 ../model
