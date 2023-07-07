@@ -74,23 +74,7 @@ public class FrontServlet extends HttpServlet {
             ex.printStackTrace();
         }
     }
-    public void ObjectToJson(Object o,PrintWriter out ){
-        Gson gson = new Gson();
-        String json = gson.toJson(o); 
-    }
-    public void redirect(ModelView nomjs ,HttpServletRequest req, HttpServletResponse res)throws ServletException, IOException ,Exception{ 
-        PrintWriter out=res.getWriter();
-        HashMap<String,Object> dataMap = nomjs.getData();        
-        Method isjon = nomjs.getClass().getMethod("getIsjson",new Class[0]);
-        if((Boolean) isjon.invoke(nomjs, (Object[])null) == true){
-            Gson gson = new Gson();
-            String json = gson.toJson(nomjs.getData()); 
-            out.println("tafiditraaaa");
-            RequestDispatcher dispat = req.getRequestDispatcher(nomjs.getUrl());
-            dispat.forward(req, res);
-            return ;             
-        }
-    }
+   
     private  String getFileName(jakarta.servlet.http.Part part) {
         String contentDisposition = part.getHeader("content-disposition");
         String[] parts = contentDisposition.split(";");
@@ -188,6 +172,7 @@ public class FrontServlet extends HttpServlet {
             dispat.forward(request, response);
         }
     }
+     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws Exception {
             PrintWriter out = response.getWriter();
@@ -250,6 +235,12 @@ public class FrontServlet extends HttpServlet {
                 if(view.getIsjson()){
                     String json = new Gson().toJson(view.getData());
                     out.println(json);
+                }
+                Annotation[] an = mets.getAnnotations();
+                if(an.length!=0){
+                    RestapiAnnotation annotation = mets.getAnnotation(RestapiAnnotation.class);
+                    String json = new Gson().toJson(view.getData());
+                    out.println(json+"methode");
                 }
             }catch(Exception e){
                 e.printStackTrace(out);

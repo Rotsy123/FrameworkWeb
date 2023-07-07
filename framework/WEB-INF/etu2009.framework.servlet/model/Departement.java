@@ -1,5 +1,7 @@
 package etu2009.framework.model;
 import etu2009.framework.servlet.Scopeannotation;
+import etu2009.framework.servlet.RestapiAnnotation;
+
 import etu2009.framework.servlet.*;
 
 @Scopeannotation(indication="singleton")
@@ -15,7 +17,12 @@ public class Departement {
     public void setUpload(FileUpload upload) {
         this.upload = upload;
     }
-    
+    public Departement GetDepartement(){
+        Departement emp = new Departement("Departement Marketing",12);
+        return emp;
+    }
+
+    @RestapiAnnotation(indication = "restapi")
     @GetUrl(url="findAllDept")
     public ModelView findAll(Integer id){
         Departement emp = new Departement("Departement Marketing",12);
