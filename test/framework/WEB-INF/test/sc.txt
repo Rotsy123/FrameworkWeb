@@ -1,3 +1,0 @@
-javac -parameters -d . ModelView.java
-javac -parameters -d . GetUrl.java
-move etu2009 ../model
