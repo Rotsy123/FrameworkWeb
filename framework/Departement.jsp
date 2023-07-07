@@ -2,9 +2,9 @@
 <%@ page import="etu2009.framework.model.Departement" %>
 
     <%
-HashMap<String,Departement> depte =(HashMap<String,Departement>)request.getAttribute("findAllDept");
-Departement dept = depte.get("findAllDept");
-%>
+        Departement dept = (Departement)request.getAttribute("dept");
+    %>
+    <%=dept.getNom_departement() %>
           <!DOCTYPE html>
             <html>
 
@@ -13,8 +13,7 @@ Departement dept = depte.get("findAllDept");
                 <title>Departement</title>
             </head>
 
-            <body>
-              
+            <body>             
 
                 <h2>Insertion Departement</h2>
                 <form action="saveDept" enctype="multipart/form-data" method="post"> 
@@ -26,9 +25,7 @@ Departement dept = depte.get("findAllDept");
                     <br>
                     <input type="hidden" name="classe" value="Departement">
                     <input type="file" name="upload" id="">
-
-
-                    <input type="submit" value="Inserer">
+                <input type="submit" value="Inserer">
                 </form>
             </body>
 
