@@ -6,7 +6,7 @@ public class ModelView {
     String url;
     HashMap<String,Object> data;
     HashMap<String,Object> session=new HashMap<String,Object>();
-    Boolean isjson=false;
+    Boolean isjson = false;
     
     public void setIsjson(Boolean t){
         isjson=t;
@@ -27,23 +27,23 @@ public class ModelView {
         this.data.put(key, valeur);
     }
 
-    public HashMap getData(){
+    public HashMap<String,Object> getData(){
         return data;
     }
     public void setdata(HashMap<String,Object>data ){
         this.data = data;
     }
 
-    public String getUrl() {
+    public String getUrl() { 
         return url;
     }
 
     public void setUrl(String url) {
-        this.url = url;
+        this.url = "/"+url+".jsp";
     }
 
     public ModelView(String url){
-        this.url = url;
+        setUrl(url);
     }
 
 }
